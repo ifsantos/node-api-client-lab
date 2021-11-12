@@ -3,25 +3,34 @@ const axios = require('axios');
 The querystring API is considered Legacy. While it is still maintained, new code should use the URLSearchParams API instead.
 */
 const querystring = require('querystring');
+//const urlSearchParams = require('URLSearchParams');
 const crypto = require('crypto');
 const apiKey = process.env.API_KEY;
 const secretKey = process.env.SECRET_KEY;
 const apiUrl = process.env.API_URL;
 
 async function privateCall(path, data={}, method = 'GET'){
-    const timestamp  = Date.time();
-    const signature = crypto.createHmac('sha256', apiSecret)
-                        .update(`${querystring.stringify({...data,timestamp})}`)
+    const timestamp  = Date.now();
+    console.log(`[Private] data: ${data}`);
+    let paramTimestamp = new URLSearchParams({...data, timestamp})
+    const signature = crypto.createHmac('sha256', secretKey)
+                        //.update(`${querystring.stringify({...data,timestamp})}`)
+                        .update(`${paramTimestamp.toString()}`)
                         .digest('hex');
-    const newData = {...data, timestamp,  signature };
-    const qs =  `?${querystring.stringify(newData)}`;
+    const newData = {...data, timestamp, signature };    
+    //const qs =  `?${querystring.stringify(newData)}`;
+    const params = new URLSearchParams(newData);
+    
+    const qs =  `?${params.toString()}`;
+    console.log(`[Private] QueryS : ${qs}`);
 
     try {
         const result  = await axios({
             method,
-            url: `${api_url}${path}${qs}`,
-            headers: { 'X-MBX-APIKEY': apiKey}
+            url: `${apiUrl}${path}${qs}`,
+            headers: { 'X-MBX-APIKEY': apiKey } //binance header
         })
+        console.log(`[Private] Status: ${result.status} - ${result.statusText}`);
         return result.data;
 
     } catch ( err ) {
@@ -36,12 +45,14 @@ async function accountInfo(){
 
 async function publicCall(path, data, method = 'GET'){
     try {
-        const qs = data ? `?${querystring.stringify(data)}` : '';
+        const params = new URLSearchParams(data);
+        //const qs = data ? `?${querystring.stringify(data)}` : '';
+        const qs = data ? `?${params.toString()}` : '';
         const result = await axios({
             method,
-            url: `${process.env.API_URL}${path}${qs}`
+            url: `${apiUrl}${path}${qs}`
         });
-
+        console.log(`public status: ${result.status} - ${result.statusText}`);
         return result.data;
     } catch (err) {
         console.log(err)
