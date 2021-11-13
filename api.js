@@ -11,7 +11,7 @@ const apiUrl = process.env.API_URL;
 
 async function privateCall(path, data={}, method = 'GET'){
     const timestamp  = Date.now();
-    console.log(`[Private] data: ${data}`);
+    //console.log(`[Private] data: ${data}`);
     let paramTimestamp = new URLSearchParams({...data, timestamp})
     const signature = crypto.createHmac('sha256', secretKey)
                         //.update(`${querystring.stringify({...data,timestamp})}`)
@@ -22,7 +22,7 @@ async function privateCall(path, data={}, method = 'GET'){
     const params = new URLSearchParams(newData);
     
     const qs =  `?${params.toString()}`;
-    console.log(`[Private] QueryS : ${qs}`);
+    //console.log(`[Private] QueryS : ${qs}`);
 
     try {
         const result  = await axios({
@@ -37,11 +37,6 @@ async function privateCall(path, data={}, method = 'GET'){
         console.log(err);
     } 
 }
-
-async function accountInfo(){
-    return privateCall('/v3/account');
-}
-
 
 async function publicCall(path, data, method = 'GET'){
     try {
@@ -59,6 +54,21 @@ async function publicCall(path, data, method = 'GET'){
     }
 }
 
+
+async function accountInfo(){
+    return privateCall('/v3/account');
+}
+
+async function newOrder(symbol, quantity, price, side = 'BUY', type = 'MARKET'){
+    const data = { symbol, quantity, side, type }
+
+    if (price) data.price = price;
+    if (type === 'LIMIT') data.timeInForce = 'GTC';
+
+
+    return privateCall('/v3/order',data, 'POST');
+}
+
 async function time(){
     return publicCall('/v3/time');
 }
@@ -71,4 +81,4 @@ async function depth(symbol = 'BTCBRL', limit = 5){
     return publicCall('/v3/depth', {symbol, limit})
 }
 
-module.exports = { time, depth, exchangeInfo, accountInfo }
+module.exports = { time, depth, exchangeInfo, accountInfo, newOrder }
