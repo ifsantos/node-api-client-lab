@@ -9,3 +9,6 @@ Initialization
 Dependencies:
  - axios 
  - dotenv
+
+Refferences:
+<https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams/toString#browser_compatibility>
